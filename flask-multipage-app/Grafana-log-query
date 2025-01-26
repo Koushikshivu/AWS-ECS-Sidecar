@@ -1,0 +1,31 @@
+For 2XX
+
+fields @message
+| parse @message /(?<ip>\d+\.\d+\.\d+\.\d+) - - \[[^\]]+\] "(?<method>[A-Z]+) (?<path>[^ ]+) HTTP\/1.1" (?<status_code>\d+)/
+| filter method = "GET" and status_code >= 200 and status_code < 300
+| stats count() as request_count by path
+| sort request_count desc
+2xx 4xx workagthella
+
+For 4XX
+
+fields @message
+| parse @message /(?<ip>\d+\.\d+\.\d+\.\d+) - - \[[^\]]+\] ".*?(?<method>[A-Z]+) (?<path>[^ ]+) HTTP\/1.1.*?" (?<status_code>\d+)/
+| filter method = "GET" and status_code like /^4\d\d$/
+| stats count() as request_count by path, status_code
+| sort request_count desc
+
+2xx and 4xx with time stamp
+
+fields @message
+| parse @message /(?<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d+ INFO .*? - - \[[^\]]+\] ".*?(?<method>[A-Z]+) (?<path>[^ ]+) HTTP\/1.1.*?" (?<status_code>\d+)/
+| filter status_code like /^2\d\d$/
+| display timestamp, method, path, status_code
+| sort timestamp asc
+
+fields @message
+| parse @message /(?<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}),\d+ INFO .*? - - \[[^\]]+\] ".*?(?<method>[A-Z]+) (?<path>[^ ]+) HTTP\/1.1.*?" (?<status_code>\d+)/
+| filter status_code like /^4\d\d$/
+| display timestamp, method, path, status_code
+| sort timestamp asc
+
